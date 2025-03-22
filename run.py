@@ -77,7 +77,10 @@ def salvar_horarios_em_excel(horarios):
     }
 
     # Obter o diretório do script em execução
-    current_dir = os.path.dirname(os.path.abspath(__file__))
+    if '__file__' in globals():
+         current_dir = os.path.dirname(os.path.abspath(__file__))
+    else:
+        current_dir = os.getcwd()  
     file_name = os.path.join(current_dir, f"horarios_turmas_{time.time()}.xlsx")    
 
     with pd.ExcelWriter(file_name, engine='openpyxl') as writer:
@@ -204,22 +207,6 @@ def gerar_horarios_turmas(carga_horaria):
                             alocado = False
 
     return horario
-
-# Gera os horários para todas as turmas
-def gerar_horarios_todas_turmas():   
-    def verificar_alocacao(horario, carga_horaria, turma):
-        """Verifica se todas as matérias foram alocadas corretamente."""
-        alocadas = [materia for dia in horario for materia in dia if materia]
-        for materia, carga in carga_horaria.items():
-            if alocadas.count(materia) != carga:
-                print(f"Erro: A matéria {materia} não foi completamente alocada na turma {turma}.") 
-
-    horarios_turmas = {}
-    for turma, carga_horaria in turmas.items():
-        horarios_turmas[turma] = gerar_horarios_turmas(carga_horaria)
-    verificar_alocacao(horarios_turmas[turma], carga_horaria, turma)
-
-    return horarios_turmas
 
 def avaliar_aptidao(horarios):
     penalidades = 0
@@ -405,12 +392,34 @@ def algoritmo_genetico():
             salvar_horarios_em_excel(melhor_individuo[0])
             break
 
+def format_time(timestamp):
+    """Formata um timestamp no formato HH:MM:SS."""
+    return time.strftime("%H:%M:%S", time.localtime(timestamp))
 
-# Executar o algoritmo genético
-start_time = time.time()
-start_time_formatted = time.strftime("%H:%M:%S", time.localtime(start_time))
-print(f"Tempo total inicial: {start_time_formatted}")
-algoritmo_genetico()
-end_time = time.time()
-end_time_formatted = time.strftime("%H:%M:%S", time.localtime(end_time))
-print(f"Tempo total final: {end_time_formatted}")
+def print_time(label, timestamp):
+    """Imprime um timestamp formatado com um rótulo."""
+    formatted_time = format_time(timestamp)
+    print(f"{label}: {formatted_time}")
+
+def run_algorithm(algorithm):
+    """Executa um algoritmo e imprime o tempo inicial, final e o tempo total de execução."""
+    start_time = time.time()
+    print_time("Tempo inicial", start_time)
+    
+    algorithm()  # Executa o algoritmo passado como parâmetro
+    
+    end_time = time.time()
+    print_time("Tempo final", end_time)
+    
+    # Calcula e imprime o tempo total de execução
+    execution_time = end_time - start_time
+    print(f"Tempo total de execução: {execution_time:.2f} segundos")
+
+def main():
+    print("Iniciando execução do algoritmo genético.")
+    run_algorithm(algoritmo_genetico)
+    print("Execução concluída.")
+
+if __name__ == "__main__":
+    main()
+
